@@ -4,8 +4,8 @@ import android.os.Bundle;
 import android.os.CountDownTimer;
 import android.view.View;
 import android.widget.Button;
+import android.widget.SeekBar;
 import android.widget.TextView;
-
 import androidx.activity.EdgeToEdge;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
@@ -19,6 +19,8 @@ public class MainActivity extends AppCompatActivity {
     CountDownTimer timer;
     TextView textView;
     private long secondLeft = 60000;
+    private SeekBar seekBar;
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -34,6 +36,43 @@ public class MainActivity extends AppCompatActivity {
         setSupportActionBar(toolbar);
         textView = findViewById(R.id.textView);
         button = findViewById(R.id.button);
+        seekBar = findViewById(R.id.seekBar);
+        seekBar.setMax(600);
+        seekBar.setProgress(60);
+        seekBar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
+            @Override
+            public void onProgressChanged(SeekBar seekBar, int progress, boolean b) {
+                int minutes = progress/60;
+                int seconds = progress - (minutes*60);
+
+                String minutesString = "";
+                String secondsString = "";
+
+                if(minutes < 10) {
+                    minutesString ="0"+ minutes;
+                } else {
+                    minutesString = String.valueOf(minutes);
+
+                }
+                if(seconds<10){
+                    secondsString = "0" + seconds;
+                } else {
+                    secondsString = String.valueOf(seconds);
+                }
+                textView.setText(minutesString + ":" + secondsString);
+
+            }
+
+            @Override
+            public void onStartTrackingTouch(SeekBar seekBar) {
+
+            }
+
+            @Override
+            public void onStopTrackingTouch(SeekBar seekBar) {
+
+            }
+        });
 
     }
 
