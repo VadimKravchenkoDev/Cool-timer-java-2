@@ -2,10 +2,12 @@ package com.kravchenkovadim.cooltimerkotlin;
 
 import android.os.Bundle;
 import android.os.CountDownTimer;
+import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.SeekBar;
 import android.widget.TextView;
+
 import androidx.activity.EdgeToEdge;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
@@ -14,11 +16,9 @@ import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
 
 public class MainActivity extends AppCompatActivity {
-    Boolean checkTimer = true;
     Button button;
     CountDownTimer timer;
     TextView textView;
-    private long secondLeft = 60000;
     private SeekBar seekBar;
 
 
@@ -42,24 +42,8 @@ public class MainActivity extends AppCompatActivity {
         seekBar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
             @Override
             public void onProgressChanged(SeekBar seekBar, int progress, boolean b) {
-                int minutes = progress/60;
-                int seconds = progress - (minutes*60);
-
-                String minutesString = "";
-                String secondsString = "";
-
-                if(minutes < 10) {
-                    minutesString ="0"+ minutes;
-                } else {
-                    minutesString = String.valueOf(minutes);
-
-                }
-                if(seconds<10){
-                    secondsString = "0" + seconds;
-                } else {
-                    secondsString = String.valueOf(seconds);
-                }
-                textView.setText(minutesString + ":" + secondsString);
+                long progressInMillis = progress * 1000;
+                upadateTimer(progressInMillis);
 
             }
 
@@ -76,32 +60,38 @@ public class MainActivity extends AppCompatActivity {
 
     }
 
-    public void onClick(View view) {
-        if (checkTimer) {
-            timer = new CountDownTimer(secondLeft, 1000) {
+    public void start(View view) {
+        new CountDownTimer(seekBar.getProgress() * 1000, 1000) {
             @Override
-            public void onTick(long millisUntilFinished) {
-                textView.setText("00:" + String.valueOf(millisUntilFinished / 1000));
-                secondLeft = millisUntilFinished;
+            public void onTick(long l) {
+                upadateTimer(l);
             }
 
             @Override
             public void onFinish() {
+                Log.d("onFinish", "Finish");
             }
-        };
-            startTimer();
+        }.start();
+    }
+
+    private void upadateTimer(long l){
+        int minutes = (int) l / 1000 / 60;
+        int seconds = (int) l / 1000 - (minutes * 60);
+
+        String minutesString = "";
+        String secondsString = "";
+
+        if (minutes < 10) {
+            minutesString = "0" + minutes;
         } else {
-            stopTimer();
+            minutesString = String.valueOf(minutes);
+
         }
-    }
-    public void startTimer(){
-        timer.start();
-        button.setText("PAUSE");
-        checkTimer = false;
-    }
-    public void stopTimer(){
-        button.setText("START");
-        checkTimer = true;
-        timer.cancel();
+        if (seconds < 10) {
+            secondsString = "0" + seconds;
+        } else {
+            secondsString = String.valueOf(seconds);
+        }
+        textView.setText(minutesString + ":" + secondsString);
     }
 }
