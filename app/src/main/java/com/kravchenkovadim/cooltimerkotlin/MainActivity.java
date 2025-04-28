@@ -1,15 +1,19 @@
 package com.kravchenkovadim.cooltimerkotlin;
 
+import android.content.Intent;
 import android.media.MediaPlayer;
 import android.os.Bundle;
 import android.os.CountDownTimer;
-import android.util.Log;
+import android.view.Menu;
+import android.view.MenuInflater;
+import android.view.MenuItem;
 import android.view.View;
 import android.widget.Button;
 import android.widget.SeekBar;
 import android.widget.TextView;
 
 import androidx.activity.EdgeToEdge;
+import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
 import androidx.core.graphics.Insets;
@@ -34,8 +38,7 @@ public class MainActivity extends AppCompatActivity {
             v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom);
             return insets;
         });
-        Toolbar toolbar = findViewById(R.id.toolbar);
-        setSupportActionBar(toolbar);
+
         textView = findViewById(R.id.textView);
         button = findViewById(R.id.button);
         seekBar = findViewById(R.id.seekBar);
@@ -47,7 +50,7 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onProgressChanged(SeekBar seekBar, int progress, boolean b) {
                 long progressInMillis = progress * 1000;
-                upadateTimer(progressInMillis);
+                updateTimer(progressInMillis);
 
             }
 
@@ -65,18 +68,19 @@ public class MainActivity extends AppCompatActivity {
     }
 
     public void start(View view) {
-        if(!isTimerOn){
+        if (!isTimerOn) {
             button.setText("Stop");
             seekBar.setEnabled(false);
             isTimerOn = true;
             countDownTimer = new CountDownTimer(seekBar.getProgress() * 1000, 1000) {
                 @Override
                 public void onTick(long l) {
-                    upadateTimer(l);
+                    updateTimer(l);
                 }
+
                 @Override
                 public void onFinish() {
-                    MediaPlayer mediaPlayer = MediaPlayer.create(getApplicationContext(),R.raw.bell_sound);
+                    MediaPlayer mediaPlayer = MediaPlayer.create(getApplicationContext(), R.raw.bell_sound);
                     mediaPlayer.start();
                     resetTimer();
                 }
@@ -87,7 +91,7 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-    private void upadateTimer(long l){
+    private void updateTimer(long l) {
         int minutes = (int) l / 1000 / 60;
         int seconds = (int) l / 1000 - (minutes * 60);
 
@@ -108,12 +112,36 @@ public class MainActivity extends AppCompatActivity {
         textView.setText(minutesString + ":" + secondsString);
     }
 
-    private void resetTimer(){
+    private void resetTimer() {
         countDownTimer.cancel();
         textView.setText("00:30");
         button.setText("Start");
         seekBar.setEnabled(true);
         seekBar.setProgress(30);
         isTimerOn = false;
+    }
+
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        MenuInflater menuInflater = getMenuInflater();
+        menuInflater.inflate(R.menu.timer_menu, menu);
+        return true;
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(@NonNull MenuItem item) {
+        int id = item.getItemId();
+        if (id == R.id.action_settings) {
+            Intent openSettings = new Intent(this, SettingsActivity.class);
+            startActivity(openSettings);
+            return true;
+        } else {
+            if (id == R.id.action_about) {
+                Intent openAbout = new Intent(this, AboutActivity.class);
+                startActivity(openAbout);
+                return true;
+            }
+        }
+        return super.onOptionsItemSelected(item);
     }
 }
