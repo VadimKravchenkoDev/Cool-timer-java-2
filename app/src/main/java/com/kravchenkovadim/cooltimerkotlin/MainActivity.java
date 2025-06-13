@@ -1,13 +1,12 @@
 package com.kravchenkovadim.cooltimerkotlin;
 
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.media.MediaPlayer;
 import android.os.Bundle;
 import android.os.CountDownTimer;
 import android.view.Menu;
-import android.view.MenuInflater;
 import android.view.MenuItem;
-import android.view.View;
 import android.widget.Button;
 import android.widget.SeekBar;
 import android.widget.TextView;
@@ -15,18 +14,20 @@ import android.widget.TextView;
 import androidx.activity.EdgeToEdge;
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
-import androidx.appcompat.widget.Toolbar;
 import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
+import androidx.preference.PreferenceManager;
+
+import java.lang.reflect.Method;
 
 public class MainActivity extends AppCompatActivity {
-    private CountDownTimer countDownTimer;
-    TextView textView;
     private SeekBar seekBar;
-    private boolean isTimerOn;
+    private TextView textView;
     private Button button;
-
+    private CountDownTimer countDownTimer;
+    private boolean isTimerOn;
+    private MediaPlayer mediaPlayer;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -39,109 +40,111 @@ public class MainActivity extends AppCompatActivity {
             return insets;
         });
 
+        isTimerOn = false;
+        seekBar = findViewById(R.id.seekBar);
         textView = findViewById(R.id.textView);
         button = findViewById(R.id.button);
-        seekBar = findViewById(R.id.seekBar);
         seekBar.setMax(600);
-        seekBar.setProgress(30);
-        isTimerOn = false;
-        button = findViewById(R.id.button);
+        seekBar.setProgress(59);
+
         seekBar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
             @Override
             public void onProgressChanged(SeekBar seekBar, int progress, boolean b) {
-                long progressInMillis = progress * 1000;
-                updateTimer(progressInMillis);
-
+                progress = progress * 1000;
+                setTimer(progress);
             }
-
             @Override
             public void onStartTrackingTouch(SeekBar seekBar) {
-
             }
-
             @Override
             public void onStopTrackingTouch(SeekBar seekBar) {
-
             }
         });
 
+        button = findViewById(R.id.button);
+        button.setOnClickListener(view -> {
+            if (!isTimerOn) {
+                button.setText("STOP");
+                seekBar.setEnabled(false);
+                isTimerOn = true;
+                countDownTimer = new CountDownTimer(seekBar.getProgress() * 1000L, 1000) {
+                    @Override
+                    public void onTick(long l) {
+                        setTimer(l);
+                    }
+
+                    @Override
+                    public void onFinish() {
+                        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
+                        boolean isChecked = prefs.getBoolean("sound", false);
+                        String sound = prefs.getString("melody", "bell");
+                        int resId = getResources().getIdentifier(sound, "raw",getPackageName());
+                        if(isChecked){
+
+                            mediaPlayer = MediaPlayer.create(getApplicationContext(), resId);
+                            mediaPlayer.start();
+                        }
+                        resetTimer();
+                    }
+                }.start();
+            } else {
+                resetTimer();
+            }
+        });
     }
 
-    public void start(View view) {
-        if (!isTimerOn) {
-            button.setText("Stop");
-            seekBar.setEnabled(false);
-            isTimerOn = true;
-            countDownTimer = new CountDownTimer(seekBar.getProgress() * 1000, 1000) {
-                @Override
-                public void onTick(long l) {
-                    updateTimer(l);
-                }
-
-                @Override
-                public void onFinish() {
-                    MediaPlayer mediaPlayer = MediaPlayer.create(getApplicationContext(), R.raw.bell_sound);
-                    mediaPlayer.start();
-                    resetTimer();
-                }
-            };
-            countDownTimer.start();
-        } else {
-            resetTimer();
-        }
-    }
-
-    private void updateTimer(long l) {
-        int minutes = (int) l / 1000 / 60;
-        int seconds = (int) l / 1000 - (minutes * 60);
-
-        String minutesString = "";
-        String secondsString = "";
-
+    private void setTimer(long progress) {
+        int minutes = (int) progress / 1000 / 60;
+        int seconds = (int) progress / 1000 - minutes * 60;
+        String stMinutes = "";
+        String stSeconds = "";
         if (minutes < 10) {
-            minutesString = "0" + minutes;
+            stMinutes = "0" + minutes;
         } else {
-            minutesString = String.valueOf(minutes);
-
+            stMinutes = "" + minutes;
         }
         if (seconds < 10) {
-            secondsString = "0" + seconds;
+            stSeconds = "0" + seconds;
         } else {
-            secondsString = String.valueOf(seconds);
+            stSeconds = "" + seconds;
         }
-        textView.setText(minutesString + ":" + secondsString);
+        textView.setText(stMinutes + ":" + stSeconds);
     }
 
     private void resetTimer() {
-        countDownTimer.cancel();
-        textView.setText("00:30");
-        button.setText("Start");
+        button.setText("START");
         seekBar.setEnabled(true);
-        seekBar.setProgress(30);
+        seekBar.setProgress(59);
+        textView.setText("00:59");
         isTimerOn = false;
+        countDownTimer.cancel();
     }
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
-        MenuInflater menuInflater = getMenuInflater();
-        menuInflater.inflate(R.menu.timer_menu, menu);
+        getMenuInflater().inflate(R.menu.menu_settings,menu);
         return true;
     }
 
     @Override
     public boolean onOptionsItemSelected(@NonNull MenuItem item) {
-        int id = item.getItemId();
-        if (id == R.id.action_settings) {
-            Intent openSettings = new Intent(this, SettingsActivity.class);
-            startActivity(openSettings);
+        if(item.getItemId()==R.id.menu_settings){
+            startActivity(new Intent(this, SettingsActivity.class));
             return true;
-        } else {
-            if (id == R.id.action_about) {
-                Intent openAbout = new Intent(this, AboutActivity.class);
-                startActivity(openAbout);
-                return true;
-            }
         }
         return super.onOptionsItemSelected(item);
+    }
+    @Override
+    public boolean onMenuOpened(int featureId, Menu menu) {
+        if (menu.getClass().getSimpleName().equals("MenuBuilder")) {
+            try {
+                Method m = menu.getClass().getDeclaredMethod("setOptionalIconsVisible", Boolean.TYPE);
+                m.setAccessible(true);
+                m.invoke(menu, true);
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
+        return super.onMenuOpened(featureId, menu);
     }
 }
