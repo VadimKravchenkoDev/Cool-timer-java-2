@@ -158,4 +158,21 @@ public class MainActivity extends AppCompatActivity {
         }
         return super.onMenuOpened(featureId, menu);
     }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        // Обновляем данные при возвращении из настроек
+        String timePrefs = prefs.getString("time", "59");
+        if (timePrefs != null && !timePrefs.isEmpty()) {
+            time = Integer.parseInt(timePrefs);
+        } else {
+            time = 59;
+        }
+
+        seekBar.setProgress(time);
+        setTimer(time * 1000L);
+    }
+
+
 }
