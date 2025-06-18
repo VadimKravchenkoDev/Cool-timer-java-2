@@ -29,6 +29,7 @@ public class MainActivity extends AppCompatActivity {
     private boolean isTimerOn;
     private MediaPlayer mediaPlayer;
     SharedPreferences prefs;
+    int time;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -40,22 +41,30 @@ public class MainActivity extends AppCompatActivity {
             v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom);
             return insets;
         });
+        textView = findViewById(R.id.textView);
         prefs = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
+        String timePrefs = prefs.getString("time", "59");
+        if (timePrefs != null) {
+            time = new Integer(timePrefs);
+        } else time = 59;
+        String setTimer = String.valueOf(time);
+        textView.setText("00:" + setTimer);
         isTimerOn = false;
         seekBar = findViewById(R.id.seekBar);
-        textView = findViewById(R.id.textView);
         button = findViewById(R.id.button);
         seekBar.setMax(600);
-        seekBar.setProgress(59);
+        seekBar.setProgress(time);
         seekBar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
             @Override
             public void onProgressChanged(SeekBar seekBar, int progress, boolean b) {
                 progress = progress * 1000;
                 setTimer(progress);
             }
+
             @Override
             public void onStartTrackingTouch(SeekBar seekBar) {
             }
+
             @Override
             public void onStopTrackingTouch(SeekBar seekBar) {
             }
@@ -78,18 +87,18 @@ public class MainActivity extends AppCompatActivity {
 
                         boolean isChecked = prefs.getBoolean("sound", false);
                         String sound = prefs.getString("melody", "bell");
-                        int resId = getResources().getIdentifier(sound, "raw",getPackageName());
-                        if(isChecked){
+                        int resId = getResources().getIdentifier(sound, "raw", getPackageName());
+                        if (isChecked) {
 
                             mediaPlayer = MediaPlayer.create(getApplicationContext(), resId);
                             mediaPlayer.start();
                         }
-                        String time = prefs.getString("time", "59");
-                        resetTimer();
+
+                        resetTimer(time);
                     }
                 }.start();
             } else {
-                resetTimer();
+                resetTimer(time);
             }
         });
     }
@@ -112,29 +121,30 @@ public class MainActivity extends AppCompatActivity {
         textView.setText(stMinutes + ":" + stSeconds);
     }
 
-    private void resetTimer() {
+    private void resetTimer(int time) {
         button.setText("START");
         seekBar.setEnabled(true);
-        seekBar.setProgress(59);
-        textView.setText("00:59");
+        seekBar.setProgress(time);
+        textView.setText("00:" + time);
         isTimerOn = false;
         countDownTimer.cancel();
     }
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
-        getMenuInflater().inflate(R.menu.menu_settings,menu);
+        getMenuInflater().inflate(R.menu.menu_settings, menu);
         return true;
     }
 
     @Override
     public boolean onOptionsItemSelected(@NonNull MenuItem item) {
-        if(item.getItemId()==R.id.menu_settings){
+        if (item.getItemId() == R.id.menu_settings) {
             startActivity(new Intent(this, SettingsActivity.class));
             return true;
         }
         return super.onOptionsItemSelected(item);
     }
+
     @Override
     public boolean onMenuOpened(int featureId, Menu menu) {
         if (menu.getClass().getSimpleName().equals("MenuBuilder")) {
