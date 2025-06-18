@@ -14,4 +14,13 @@
         android:entryValues="@array/theme_values"
         android:defaultValue="bell"/>
 
+    <EditTextPreference
+        android:title="Choose the time"
+        android:summary="seconds"
+        android:key="time"
+        android:defaultValue="59"
+        >
+
+    </EditTextPreference>
+
 </androidx.preference.PreferenceScreen>

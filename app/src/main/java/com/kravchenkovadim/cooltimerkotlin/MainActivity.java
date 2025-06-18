@@ -28,6 +28,7 @@ public class MainActivity extends AppCompatActivity {
     private CountDownTimer countDownTimer;
     private boolean isTimerOn;
     private MediaPlayer mediaPlayer;
+    SharedPreferences prefs;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -39,14 +40,13 @@ public class MainActivity extends AppCompatActivity {
             v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom);
             return insets;
         });
-
+        prefs = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
         isTimerOn = false;
         seekBar = findViewById(R.id.seekBar);
         textView = findViewById(R.id.textView);
         button = findViewById(R.id.button);
         seekBar.setMax(600);
         seekBar.setProgress(59);
-
         seekBar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
             @Override
             public void onProgressChanged(SeekBar seekBar, int progress, boolean b) {
@@ -75,7 +75,7 @@ public class MainActivity extends AppCompatActivity {
 
                     @Override
                     public void onFinish() {
-                        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
+
                         boolean isChecked = prefs.getBoolean("sound", false);
                         String sound = prefs.getString("melody", "bell");
                         int resId = getResources().getIdentifier(sound, "raw",getPackageName());
@@ -84,6 +84,7 @@ public class MainActivity extends AppCompatActivity {
                             mediaPlayer = MediaPlayer.create(getApplicationContext(), resId);
                             mediaPlayer.start();
                         }
+                        String time = prefs.getString("time", "59");
                         resetTimer();
                     }
                 }.start();
